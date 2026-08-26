@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>House Appraiser</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a30;--text:#f7f8fb;--muted:#aab4cf;--accent:#6ee7b7;--accent2:#60a5fa;--danger:#fb7185}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#080d1b,#111a35);color:var(--text)}
+.app{max-width:980px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px}.brand h1{margin:0;font-size:1.9rem}.brand p{margin:5px 0;color:var(--muted)}
+.score{display:flex;gap:12px}.pill{background:rgba(255,255,255,.07);padding:10px 14px;border-radius:14px;text-align:center}.pill b{display:block;font-size:1.1rem}
+.card{background:rgba(18,26,48,.88);border:1px solid rgba(255,255,255,.08);border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.photo-wrap{position:relative;background:#080d18}.photo{display:block;width:100%;height:min(58vw,560px);object-fit:cover}.nav{position:absolute;top:50%;transform:translateY(-50%);border:0;background:rgba(0,0,0,.48);color:#fff;width:46px;height:46px;border-radius:50%;font-size:28px;cursor:pointer}.prev{left:14px}.next{right:14px}.counter{position:absolute;right:16px;bottom:16px;background:rgba(0,0,0,.6);padding:7px 10px;border-radius:999px}
+.content{padding:22px}.round{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.08em}.location{font-size:1.5rem;margin:6px 0 16px}.stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}.stat{padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.06);color:#dce3f7}
+.description{margin:-6px 0 20px;color:var(--muted);font-size:1rem;line-height:1.6}
+.guess-row{display:flex;gap:10px}.input{flex:1;min-width:0;background:#0a1122;color:white;border:1px solid #31405f;border-radius:14px;padding:15px;font-size:1.1rem}.btn{border:0;border-radius:14px;padding:15px 20px;font-size:1rem;font-weight:800;cursor:pointer;background:var(--accent);color:#062319}.btn.secondary{background:#263552;color:white}.btn:disabled{opacity:.5;cursor:not-allowed}
+.result{margin-top:18px;padding:18px;border-radius:16px;background:rgba(96,165,250,.12);display:none}.result.show{display:block}.actual{font-size:2rem;font-weight:900;color:var(--accent)}.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.metric{background:rgba(255,255,255,.06);padding:12px;border-radius:12px}.metric small{display:block;color:var(--muted)}
+.actions{display:flex;gap:10px;margin-top:16px}.hidden{display:none!important}.footer{text-align:center;color:var(--muted);font-size:.85rem;margin:16px 0}
+@media(max-width:640px){.app{padding:14px}.top{align-items:flex-start;flex-direction:column}.guess-row{flex-direction:column}.guess-row .btn{width:100%}.result-grid{grid-template-columns:1fr}.photo{height:52vw;min-height:300px}.actions .btn{flex:1}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand"><h1>🏠 House Appraiser</h1><p>Study the home. Guess the listing price.</p></div>
+    <div class="score">
+      <div class="pill">Round <b id="round">1</b></div>
+      <div class="pill">Score <b id="score">0</b></div>
+      <div class="pill">Streak <b id="streak">0</b></div>
+    </div>
+  </div>
+  <main class="card">
+    <div class="photo-wrap">
+      <img id="photo" class="photo" alt="Property photo">
+      <button class="nav prev" id="prev" aria-label="Previous photo">‹</button>
+      <button class="nav next" id="next" aria-label="Next photo">›</button>
+      <div class="counter" id="counter"></div>
+    </div>
+    <div class="content">
+      <div class="round" id="roundLabel">Round 1</div>
+      <div class="location" id="location"></div>
+      <div class="stats" id="stats"></div>
+      <p class="description" id="description"></p>
+      <div class="guess-row">
+        <input class="input" id="guess" inputmode="numeric" placeholder="Enter your guess, e.g. 750000">
+        <button class="btn" id="submit">Reveal Price</button>
+      </div>
+      <div class="result" id="result">
+        <div>Actual listing price</div>
+        <div class="actual" id="actualPrice"></div>
+        <div class="result-grid">
+          <div class="metric"><small>Your guess</small><b id="yourGuess"></b></div>
+          <div class="metric"><small>Difference</small><b id="difference"></b></div>
+          <div class="metric"><small>Accuracy</small><b id="accuracy"></b></div>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="viewAll">View all photos</button>
+          <button class="btn" id="nextHouse">Next House →</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="footer" id="footer"></div>
+</div>
+<script src="data.js"></script>
+<script>
+const houses = (window.HOUSES||[]).filter(h=>h.photos&&h.photos.length&&h.price);
+const $=id=>document.getElementById(id);
+let order=[], index=0, photoIndex=0, score=0, streak=0, revealed=false;
+
+function money(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n)}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function createOrder(){
+  const indexes=[...houses.keys()];
+  return [
+    ...shuffle(indexes.filter(i=>houses[i].state==='CA')),
+    ...shuffle(indexes.filter(i=>houses[i].state!=='CA'))
+  ];
+}
+function parseGuess(v){return Number(String(v).replace(/[$,\s]/g,''))}
+function current(){return houses[order[index]]}
+function propertyDescription(h){
+  const type=(h.propertyType||'home').replace(/_/g,' ');
+  const details=[];
+  if(h.bedrooms)details.push(`${h.bedrooms}-bedroom`);
+  if(h.bathrooms)details.push(`${h.bathrooms}-bathroom`);
+  let text=`A ${details.length?details.join(', ')+' ':''}${type}`;
+  if(h.city||h.state)text+=` in ${[h.city,h.state].filter(Boolean).join(', ')}`;
+  if(h.livingArea)text+=` offering ${new Intl.NumberFormat('en-US').format(h.livingArea)} sq ft of living space`;
+  text+='.';
+  if(h.yearBuilt)text+=` Built in ${h.yearBuilt}.`;
+  if(h.lotSize)text+=` The property sits on a ${new Intl.NumberFormat('en-US').format(h.lotSize)} sq ft lot.`;
+  return text;
+}
+function showPhoto(){
+  const h=current(); photoIndex=(photoIndex+h.photos.length)%h.photos.length;
+  $('photo').src=h.photos[photoIndex]; $('counter').textContent=`${photoIndex+1} / ${h.photos.length}`;
+}
+function loadHouse(){
+  revealed=false; photoIndex=0; const h=current();
+  $('round').textContent=index+1; $('roundLabel').textContent=`Round ${index+1} of ${houses.length}`;
+  $('location').textContent=[h.city,h.state].filter(Boolean).join(', ');
+  const stats=[
+    ['🛏',h.bedrooms, h.bedrooms===1?'bedroom':'bedrooms'],
+    ['🛁',h.bathrooms, h.bathrooms===1?'bathroom':'bathrooms'],
+    ['📐',h.livingArea?new Intl.NumberFormat('en-US').format(h.livingArea):null,'sq ft'],
+    ['🏡',h.propertyType,'']
+  ].filter(x=>x[1]!==null&&x[1]!==undefined&&x[1]!==0);
+  $('stats').innerHTML=stats.map(x=>`<div class="stat">${x[0]} <b>${x[1]}</b> ${x[2]}</div>`).join('');
+  $('description').textContent=propertyDescription(h);
+  $('guess').value=''; $('guess').disabled=false; $('submit').disabled=false;
+  $('result').classList.remove('show'); $('nextHouse').textContent=index===houses.length-1?'Play Again':'Next House →';
+  showPhoto();
+}
+function reveal(){
+  const g=parseGuess($('guess').value), h=current();
+  if(!Number.isFinite(g)||g<=0){$('guess').focus();return}
+  revealed=true; $('guess').disabled=true; $('submit').disabled=true;
+  const diff=Math.abs(g-h.price), acc=Math.max(0,100*(1-diff/h.price));
+  const gained=Math.round(Math.pow(acc/100,3)*1000);
+  score+=gained; streak=acc>=90?streak+1:0;
+  $('score').textContent=score.toLocaleString(); $('streak').textContent=streak;
+  $('actualPrice').textContent=money(h.price); $('yourGuess').textContent=money(g);
+  $('difference').textContent=(g>h.price?'High by ':'Low by ')+money(diff);
+  $('accuracy').textContent=acc.toFixed(1)+'% · +'+gained+' pts';
+  $('result').classList.add('show');
+}
+function nextHouse(){
+  if(index>=houses.length-1){order=createOrder();index=0;score=0;streak=0;$('score').textContent=0;$('streak').textContent=0;}
+  else index++;
+  loadHouse();
+}
+$('prev').onclick=()=>{photoIndex--;showPhoto()}; $('next').onclick=()=>{photoIndex++;showPhoto()};
+$('submit').onclick=reveal; $('nextHouse').onclick=nextHouse;
+$('guess').addEventListener('keydown',e=>{if(e.key==='Enter')reveal()});
+$('viewAll').onclick=()=>{photoIndex=0;showPhoto();window.scrollTo({top:0,behavior:'smooth'})};
+if(!houses.length){document.querySelector('.card').innerHTML='<div class="content"><h2>No playable listings found</h2><p>The data file did not contain listings with both a price and a photo.</p></div>'}
+else {order=createOrder();loadHouse();$('footer').textContent=`${houses.length} homes loaded from the supplied listing data.`}
+</script>
+</body>
+</html>
