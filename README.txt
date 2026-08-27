@@ -1,6 +1,8 @@
 House Appraiser
 
-Playable homes extracted from the uploaded JSON: 200.
+Playable homes: 574.
+Includes New York plus listings downloaded for San Francisco, Los Angeles,
+and Palo Alto, California. Players choose a state before playing.
 
 To run:
 1. Open Terminal in this folder.
