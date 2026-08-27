@@ -14,7 +14,7 @@
 .content{padding:22px}.round{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.08em}.location{font-size:1.5rem;margin:6px 0 16px}.stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}.stat{padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.06);color:#dce3f7}
 .description{margin:-6px 0 20px;color:var(--muted);font-size:1rem;line-height:1.6}
 .guess-row{display:flex;gap:10px}.input{flex:1;min-width:0;background:#0a1122;color:white;border:1px solid #31405f;border-radius:14px;padding:15px;font-size:1.1rem}.btn{border:0;border-radius:14px;padding:15px 20px;font-size:1rem;font-weight:800;cursor:pointer;background:var(--accent);color:#062319}.btn.secondary{background:#263552;color:white}.btn:disabled{opacity:.5;cursor:not-allowed}
-.result{margin-top:18px;padding:18px;border-radius:16px;background:rgba(96,165,250,.12);display:none}.result.show{display:block}.actual{font-size:2rem;font-weight:900;color:var(--accent)}.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.metric{background:rgba(255,255,255,.06);padding:12px;border-radius:12px}.metric small{display:block;color:var(--muted)}
+.result{margin-top:18px;padding:18px;border-radius:16px;background:rgba(96,165,250,.12);display:none}.result.show{display:block}.actual{font-size:2rem;font-weight:900;color:var(--accent)}.zillow-link{display:inline-block;margin-top:6px;color:var(--accent2);font-weight:700}.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.metric{background:rgba(255,255,255,.06);padding:12px;border-radius:12px}.metric small{display:block;color:var(--muted)}
 .actions{display:flex;gap:10px;margin-top:16px}.hidden{display:none!important}.footer{text-align:center;color:var(--muted);font-size:.85rem;margin:16px 0}
 @media(max-width:640px){.app{padding:14px}.top{align-items:flex-start;flex-direction:column}.guess-row{flex-direction:column}.guess-row .btn{width:100%}.result-grid{grid-template-columns:1fr}.photo{height:52vw;min-height:300px}.actions .btn{flex:1}}
 </style>
@@ -48,6 +48,7 @@
       <div class="result" id="result">
         <div>Actual listing price</div>
         <div class="actual" id="actualPrice"></div>
+        <a class="zillow-link" id="zillowLink" target="_blank" rel="noopener noreferrer">View this home on Zillow ↗</a>
         <div class="result-grid">
           <div class="metric"><small>Your guess</small><b id="yourGuess"></b></div>
           <div class="metric"><small>Difference</small><b id="difference"></b></div>
@@ -108,6 +109,8 @@ function loadHouse(){
   ].filter(x=>x[1]!==null&&x[1]!==undefined&&x[1]!==0);
   $('stats').innerHTML=stats.map(x=>`<div class="stat">${x[0]} <b>${x[1]}</b> ${x[2]}</div>`).join('');
   $('description').textContent=propertyDescription(h);
+  $('zillowLink').classList.toggle('hidden',!h.id);
+  if(h.id)$('zillowLink').href=`https://www.zillow.com/homedetails/${encodeURIComponent(h.id)}_zpid/`;
   $('guess').value=''; $('guess').disabled=false; $('submit').disabled=false;
   $('result').classList.remove('show'); $('nextHouse').textContent=index===houses.length-1?'Play Again':'Next House →';
   showPhoto();
