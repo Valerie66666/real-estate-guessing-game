@@ -68,7 +68,7 @@
   </main>
   <div class="footer" id="footer"></div>
 </div>
-<script src="data.js?v=20260828-cincinnati"></script>
+<script src="data.js?v=20260828-wisconsin"></script>
 <script>
 const allHouses = (window.HOUSES||[]).filter(h=>h.photos&&h.photos.length&&h.price);
 const $=id=>document.getElementById(id);
@@ -171,7 +171,9 @@ else {
     ['OH','Cincinnati'],
     ['CA','Los Angeles'],
     ['CA','San Francisco'],
-    ['CA','Palo Alto']
+    ['CA','Palo Alto'],
+    ['WI','Madison'],
+    ['WI','Verona']
   ];
   locations
     .filter(([state,area])=>allHouses.some(h=>h.state===state&&gameArea(h)===area))
