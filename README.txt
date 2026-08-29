@@ -1,8 +1,9 @@
 House Appraiser
 
-Playable homes: 574.
+Playable homes: 773.
 Includes New York plus listings downloaded for San Francisco, Los Angeles,
-and Palo Alto, California. Players choose a state before playing.
+Palo Alto, California, and Cincinnati, Ohio. Players choose a city before
+playing.
 
 To run:
 1. Open Terminal in this folder.

@@ -24,8 +24,8 @@
   <div class="top">
     <div class="brand"><h1>🏠 House Appraiser</h1><p>Study the home. Guess the listing price.</p></div>
     <div class="state-picker">
-      <label for="stateSelect">Choose a state</label>
-      <select id="stateSelect"></select>
+      <label for="locationSelect">Choose a city</label>
+      <select id="locationSelect"></select>
     </div>
     <div class="score">
       <div class="pill">Round <b id="round">1</b></div>
@@ -68,7 +68,7 @@
   </main>
   <div class="footer" id="footer"></div>
 </div>
-<script src="data.js?v=20260826-ca"></script>
+<script src="data.js?v=20260828-cincinnati"></script>
 <script>
 const allHouses = (window.HOUSES||[]).filter(h=>h.photos&&h.photos.length&&h.price);
 const $=id=>document.getElementById(id);
@@ -77,6 +77,11 @@ let houses=[], order=[], index=0, photoIndex=0, score=0, streak=0, revealed=fals
 function money(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n)}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function createOrder(){return shuffle([...houses.keys()])}
+function gameArea(h){
+  if(h.state==='CA')return h.city;
+  if(h.state==='NY')return 'New York';
+  return h.city;
+}
 function parseGuess(v){return Number(String(v).replace(/[$,\s]/g,''))}
 function current(){return houses[order[index]]}
 function propertyDescription(h){
@@ -135,30 +140,38 @@ function nextHouse(){
   else index++;
   loadHouse();
 }
-function startState(state){
-  houses=allHouses.filter(h=>h.state===state);
+function startLocation(value){
+  const [state,...areaParts]=value.split('|'), area=areaParts.join('|');
+  houses=allHouses.filter(h=>h.state===state&&gameArea(h)===area);
   order=createOrder(); index=0; score=0; streak=0;
   $('score').textContent=0; $('streak').textContent=0;
   loadHouse();
-  const stateName=$('stateSelect').selectedOptions[0].textContent;
-  $('footer').textContent=`${houses.length} ${stateName} homes available.`;
+  const locationName=$('locationSelect').selectedOptions[0].textContent;
+  $('footer').textContent=`${houses.length} homes available in ${locationName}.`;
 }
 $('prev').onclick=()=>{photoIndex--;showPhoto()}; $('next').onclick=()=>{photoIndex++;showPhoto()};
 $('submit').onclick=reveal; $('nextHouse').onclick=nextHouse;
 $('guess').addEventListener('keydown',e=>{if(e.key==='Enter')reveal()});
 $('viewAll').onclick=()=>{photoIndex=0;showPhoto();window.scrollTo({top:0,behavior:'smooth'})};
-$('stateSelect').onchange=()=>startState($('stateSelect').value);
+$('locationSelect').onchange=()=>startLocation($('locationSelect').value);
 if(!allHouses.length){document.querySelector('.card').innerHTML='<div class="content"><h2>No playable listings found</h2><p>The data file did not contain listings with both a price and a photo.</p></div>'}
 else {
-  const stateNames={CA:'California',NY:'New York'};
-  const states=[...new Set(allHouses.map(h=>h.state).filter(Boolean))].sort((a,b)=>a==='CA'?-1:b==='CA'?1:(stateNames[a]||a).localeCompare(stateNames[b]||b));
-  states.forEach(state=>{
-    const option=document.createElement('option');
-    option.value=state; option.textContent=stateNames[state]||state;
-    $('stateSelect').appendChild(option);
-  });
-  $('stateSelect').value=states.includes('CA')?'CA':states[0];
-  startState($('stateSelect').value);
+  const locations=[
+    ['NY','New York'],
+    ['OH','Cincinnati'],
+    ['CA','Los Angeles'],
+    ['CA','San Francisco'],
+    ['CA','Palo Alto']
+  ];
+  locations
+    .filter(([state,area])=>allHouses.some(h=>h.state===state&&gameArea(h)===area))
+    .sort((a,b)=>a[1].localeCompare(b[1]))
+    .forEach(([state,area])=>{
+      const option=document.createElement('option');
+      option.value=`${state}|${area}`; option.textContent=area;
+      $('locationSelect').appendChild(option);
+    });
+  startLocation($('locationSelect').value);
 }
 </script>
 </body>
