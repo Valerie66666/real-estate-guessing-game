@@ -84,8 +84,18 @@ function gameArea(h){
 }
 function parseGuess(v){return Number(String(v).replace(/[$,\s]/g,''))}
 function current(){return houses[order[index]]}
+function formatPropertyType(value){
+  return String(value||'home')
+    .replace(/([a-z0-9])([A-Z])/g,'$1 $2')
+    .replace(/[_-]+/g,' ')
+    .toLowerCase()
+    .replace(/\b\w/g,letter=>letter.toUpperCase());
+}
+function propertyIcon(value){
+  return ['Condo','Townhome','Townhouse','Multi Family'].includes(formatPropertyType(value))?'🏢':'🏡';
+}
 function propertyDescription(h){
-  const type=(h.propertyType||'home').replace(/_/g,' ');
+  const type=formatPropertyType(h.propertyType);
   const details=[];
   if(h.bedrooms)details.push(`${h.bedrooms}-bedroom`);
   if(h.bathrooms)details.push(`${h.bathrooms}-bathroom`);
@@ -109,7 +119,7 @@ function loadHouse(){
     ['🛏',h.bedrooms, h.bedrooms===1?'bedroom':'bedrooms'],
     ['🛁',h.bathrooms, h.bathrooms===1?'bathroom':'bathrooms'],
     ['📐',h.livingArea?new Intl.NumberFormat('en-US').format(h.livingArea):null,'sq ft'],
-    ['🏡',h.propertyType,'']
+    [propertyIcon(h.propertyType),formatPropertyType(h.propertyType),'']
   ].filter(x=>x[1]!==null&&x[1]!==undefined&&x[1]!==0);
   $('stats').innerHTML=stats.map(x=>`<div class="stat">${x[0]} <b>${x[1]}</b> ${x[2]}</div>`).join('');
   $('description').textContent=propertyDescription(h);
