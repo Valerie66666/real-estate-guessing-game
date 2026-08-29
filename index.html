@@ -68,7 +68,7 @@
   </main>
   <div class="footer" id="footer"></div>
 </div>
-<script src="data.js?v=20260828-wisconsin"></script>
+<script src="data.js?v=20260828-expanded-cities"></script>
 <script>
 const allHouses = (window.HOUSES||[]).filter(h=>h.photos&&h.photos.length&&h.price);
 const $=id=>document.getElementById(id);
@@ -167,12 +167,29 @@ $('locationSelect').onchange=()=>startLocation($('locationSelect').value);
 if(!allHouses.length){document.querySelector('.card').innerHTML='<div class="content"><h2>No playable listings found</h2><p>The data file did not contain listings with both a price and a photo.</p></div>'}
 else {
   const locations=[
-    ['NY','New York'],
+    ['TX','Austin'],
+    ['NC','Charlotte'],
+    ['IL','Chicago'],
     ['OH','Cincinnati'],
+    ['OH','Columbus'],
+    ['TX','Dallas'],
+    ['CO','Denver'],
+    ['TX','Houston'],
+    ['IN','Indianapolis'],
+    ['FL','Jacksonville'],
     ['CA','Los Angeles'],
-    ['CA','San Francisco'],
-    ['CA','Palo Alto'],
     ['WI','Madison'],
+    ['FL','Miami'],
+    ['TN','Nashville'],
+    ['NY','New York'],
+    ['CA','Palo Alto'],
+    ['PA','Philadelphia'],
+    ['AZ','Phoenix'],
+    ['TX','San Antonio'],
+    ['CA','San Diego'],
+    ['CA','San Francisco'],
+    ['CA','San Jose'],
+    ['WA','Seattle'],
     ['WI','Verona']
   ];
   locations
